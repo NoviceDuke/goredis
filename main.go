@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 
-	_ "github.com/go-sql-driver/mysql"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 )
@@ -82,25 +84,41 @@ func CreateTable(db *sql.DB) error {
 	fmt.Println("建立 Table 成功！")
 	return nil
 }
+
+type User struct {
+	ID       int64  `json:"id" gorm:"primary_key;auto_increase'"`
+	Username string `json:"username"`
+	Password string `json:""`
+}
+
 func main() {
 	conn := fmt.Sprintf("%s:%s@%s(%s:%d)/%s", USERNAME, PASSWORD, NETWORK, SERVER, PORT, DATABASE)
-	db, err := sql.Open("mysql", conn)
+	db, err := gorm.Open(mysql.Open(conn), &gorm.Config{})
 	if err != nil {
-		fmt.Println("開啟 MySQL 連線發生錯誤，原因為：", err)
-		return
+		panic("使用 gorm 連線 DB 發生錯誤，原因為 " + err.Error())
 	}
-	if err := db.Ping(); err != nil {
-		fmt.Println("資料庫連線錯誤，原因為：", err.Error())
-		return
+	if err := db.AutoMigrate(new(User)); err != nil {
+		panic("資料庫 Migrate 失敗，原因為 " + err.Error())
 	}
-	defer db.Close()
-
-	fmt.Println(conn)
-	CreateTable(db)
-	server := gin.Default()
-	server.LoadHTMLGlob("template/html/*")
-	server.Static("/assets", "./template/assets")
-	server.GET("/login", LoginPage)
-	server.POST("/login", LoginAuth)
-	server.Run(":8888")
+	user := &User{
+		Username: "test",
+		Password: "test",
+	}
+	if err := CreateUser(db, user); err != nil {
+		panic("資料庫 Migrate 失敗，原因為 " + err.Error())
+	}
+	if user, err := FindUser(db, 1); err == nil {
+		log.Println("查詢到 User 為 ", user)
+	} else {
+		panic("查詢 user 失敗，原因為 " + err.Error())
+	}
+}
+func CreateUser(db *gorm.DB, user *User) error {
+	return db.Create(user).Error
+}
+func FindUser(db *gorm.DB, id int64) (*User, error) {
+	user := new(User)
+	user.ID = id
+	err := db.First(&user).Error
+	return user, err
 }
