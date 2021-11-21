@@ -24,7 +24,7 @@ const (
 	NETWORK  = "tcp"
 	SERVER   = "127.0.0.1"
 	PORT     = 3307
-	DATABASE = "localduke"
+	DATABASE = "testdb"
 )
 
 // func test(c *gin.Context) {
