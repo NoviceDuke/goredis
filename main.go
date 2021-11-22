@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 )
 
 type IndexData struct {
@@ -92,6 +93,15 @@ type User struct {
 }
 
 func main() {
+	viper.SetConfigName("app")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("./config")
+	viper.SetDefault("application.port", 8888)
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic("Read project err , cause :" + err.Error())
+	}
+	fmt.Println("application port = " + viper.GetString("application.port"))
 	conn := fmt.Sprintf("%s:%s@%s(%s:%d)/%s", USERNAME, PASSWORD, NETWORK, SERVER, PORT, DATABASE)
 	db, err := gorm.Open(mysql.Open(conn), &gorm.Config{})
 	if err != nil {
