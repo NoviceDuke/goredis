@@ -68,7 +68,7 @@ func RemoveChat(id1, id2 string) {
 }
 func init() {
 	redisClient = redis.NewClient(&redis.Options{
-		Addr: "127.0.0.1:6379",
+		Addr: "redis:6379",
 		DB:   0, // use default DB
 	})
 

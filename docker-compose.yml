@@ -2,7 +2,7 @@ version: "3.7"
 services:
   mysql:
     build:
-      context: ./mysql
+      context: ./docker/mysql
       args:
         - MYSQL_VERSION=${MYSQL_VERSION}
     ports:
@@ -15,9 +15,11 @@ services:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     volumes:
       - ${DATA_PATH_HOST}/mysql:/var/lib/mysql
+    networks:
+      - backend-bridge
   redis:
     build:
-      context: ./redis
+      context: ./docker/redis
       args:
         - REDIS_VERSION=${REDIS_VERSION}
     ports:
@@ -28,3 +30,25 @@ services:
     volumes:
       - ${DATA_PATH_HOST}/redis:/data
       - ${REDIS_CONF}:/usr/local/etc/redis/redis.conf
+    networks:
+      - backend-bridge
+  go:
+    container_name: gin
+    build: .
+    ports:
+      - "8888:8888"
+    volumes:
+      - ".:/app"
+    command: ./main
+    depends_on:
+      - mysql
+      - redis
+    links:
+      - redis
+      - mysql
+    networks:
+      - backend-bridge
+
+networks:
+  backend-bridge:
+    driver: bridge
