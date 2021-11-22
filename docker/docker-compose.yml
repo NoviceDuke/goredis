@@ -15,3 +15,16 @@ services:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     volumes:
       - ${DATA_PATH_HOST}/mysql:/var/lib/mysql
+  redis:
+    build:
+      context: ./redis
+      args:
+        - REDIS_VERSION=${REDIS_VERSION}
+    ports:
+      - ${REDIS_PORT}:6379
+    environment:
+      - TZ=${WORKSPACE_TIMEZONE}
+      - DEBUG=${REDIS_DEBUG}
+    volumes:
+      - ${DATA_PATH_HOST}/redis:/data
+      - ${REDIS_CONF}:/usr/local/etc/redis/redis.conf
